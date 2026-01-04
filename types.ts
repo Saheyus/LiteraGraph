@@ -116,11 +116,18 @@ export interface AnalysisDossier {
     avgSentenceLength: number;
     metaphorDensity: number;
     dominantLexicalFields: string[];
+    fingerprint: {
+      complexity: number;
+      richness: number;
+      cohesion: number;
+      abundance: number;
+      innovation: number;
+    };
   };
   criticalZone: {
     tensions: string[];
     contradictoryReadings: { theory: string; perspective: string }[];
-    unreadable: string[]; // What the work systematically misses
+    unreadable: string[];
   };
 }
 

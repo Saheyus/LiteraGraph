@@ -602,6 +602,7 @@ const App: React.FC = () => {
         );
 
       case 'stylistic':
+        const fp = dossier.stylistic?.fingerprint || { complexity: 0, richness: 0, cohesion: 0, abundance: 0, innovation: 0 };
         return (
           <div className="space-y-6 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -625,12 +626,27 @@ const App: React.FC = () => {
             <div className="bg-white p-8 rounded-xl border border-slate-100 shadow-sm">
               <h3 className="text-xl font-bold mb-6">Empreinte Stylistique Qualitative</h3>
               <RadarComparison data={[
-                { subject: 'Complexité', A: (dossier.stylistic?.metaphorDensity || 0) * 10 },
-                { subject: 'Richesse', A: 85 },
-                { subject: 'Cohésion', A: 70 },
-                { subject: 'Abondance', A: Math.min(100, (dossier.stylistic?.avgSentenceLength || 0) * 2) },
-                { subject: 'Innovation', A: 60 }
+                { subject: 'Complexité', A: fp.complexity },
+                { subject: 'Richesse', A: fp.richness },
+                { subject: 'Cohésion', A: fp.cohesion },
+                { subject: 'Abondance', A: fp.abundance },
+                { subject: 'Innovation', A: fp.innovation }
               ]} />
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-8">
+                {[
+                  { label: 'Complexité', val: fp.complexity, desc: 'Richesse syntaxique' },
+                  { label: 'Richesse', val: fp.richness, desc: 'Vocabulaire étendu' },
+                  { label: 'Cohésion', val: fp.cohesion, desc: 'Logique interne' },
+                  { label: 'Abondance', val: fp.abundance, desc: 'Densité textuelle' },
+                  { label: 'Innovation', val: fp.innovation, desc: 'Rupture stylistique' }
+                ].map((m, i) => (
+                  <div key={i} className="p-4 bg-slate-50 rounded-lg border border-slate-100">
+                    <div className="text-[10px] font-bold uppercase text-slate-400 mb-1">{m.label}</div>
+                    <div className="text-xl font-black text-slate-800">{m.val}%</div>
+                    <div className="text-[10px] italic text-slate-500 mt-1">{m.desc}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         );

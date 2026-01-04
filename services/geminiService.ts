@@ -49,7 +49,7 @@ const analysisSchema = {
             type: Type.OBJECT,
             properties: {
               label: { type: Type.STRING },
-              weight: { type: Type.NUMBER, description: "Scale 0-100" },
+              weight: { type: Type.NUMBER },
               description: { type: Type.STRING }
             },
             required: ["label", "weight", "description"]
@@ -62,7 +62,8 @@ const analysisSchema = {
             properties: { 
               label: { type: Type.STRING }, 
               symbolism: { type: Type.STRING } 
-            } 
+            },
+            required: ["label", "symbolism"]
           } 
         },
         correlations: {
@@ -72,7 +73,7 @@ const analysisSchema = {
             properties: {
               theme: { type: Type.STRING },
               character: { type: Type.STRING },
-              intensity: { type: Type.NUMBER, description: "Scale 0-100" }
+              intensity: { type: Type.NUMBER }
             },
             required: ["theme", "character", "intensity"]
           }
@@ -90,10 +91,12 @@ const analysisSchema = {
                   properties: {
                     stage: { type: Type.STRING },
                     intensity: { type: Type.NUMBER }
-                  }
+                  },
+                  required: ["stage", "intensity"]
                 }
               }
-            }
+            },
+            required: ["theme", "progression"]
           }
         },
         lexicalObsessions: {
@@ -103,7 +106,8 @@ const analysisSchema = {
             properties: {
               theme: { type: Type.STRING },
               keywords: { type: Type.ARRAY, items: { type: Type.STRING } }
-            }
+            },
+            required: ["theme", "keywords"]
           }
         }
       },
@@ -122,7 +126,8 @@ const analysisSchema = {
             properties: {
               label: { type: Type.STRING },
               description: { type: Type.STRING }
-            }
+            },
+            required: ["label", "description"]
           }
         },
         translationGaps: {
@@ -132,7 +137,8 @@ const analysisSchema = {
             properties: {
               targetLanguage: { type: Type.STRING },
               gapAnalysis: { type: Type.STRING }
-            }
+            },
+            required: ["targetLanguage", "gapAnalysis"]
           }
         }
       },
@@ -150,8 +156,8 @@ const analysisSchema = {
               role: { type: Type.STRING },
               archetype: { type: Type.STRING },
               description: { type: Type.STRING },
-              agency: { type: Type.NUMBER, description: "Scale 0-100" },
-              iconType: { type: Type.STRING, enum: ['hero', 'villain', 'mentor', 'ally', 'sidekick'] }
+              agency: { type: Type.NUMBER },
+              iconType: { type: Type.STRING }
             },
             required: ["name", "role", "archetype", "description", "agency", "iconType"]
           }
@@ -163,8 +169,8 @@ const analysisSchema = {
             properties: {
               source: { type: Type.STRING },
               target: { type: Type.STRING },
-              type: { type: Type.STRING, enum: ['conflict', 'love', 'kinship', 'mentor', 'neutral'] },
-              strength: { type: Type.NUMBER, description: "Scale 1-10" }
+              type: { type: Type.STRING },
+              strength: { type: Type.NUMBER }
             },
             required: ["source", "target", "type", "strength"]
           }
@@ -178,72 +184,81 @@ const analysisSchema = {
         structuralism: {
           type: Type.OBJECT,
           properties: {
-            functions: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { function: { type: Type.STRING }, scenes: { type: Type.ARRAY, items: { type: Type.STRING } } } } },
-            binaryOppositions: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { left: { type: Type.STRING }, right: { type: Type.STRING }, synthesis: { type: Type.STRING } } } },
+            functions: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { function: { type: Type.STRING }, scenes: { type: Type.ARRAY, items: { type: Type.STRING } } }, required: ["function", "scenes"] } },
+            binaryOppositions: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { left: { type: Type.STRING }, right: { type: Type.STRING }, synthesis: { type: Type.STRING } }, required: ["left", "right", "synthesis"] } },
             blindSpot: { type: Type.STRING }
-          }
+          },
+          required: ["functions", "binaryOppositions", "blindSpot"]
         },
         narratology: {
           type: Type.OBJECT,
           properties: {
             focalizationDeep: { type: Type.STRING },
-            temporalStructure: { type: Type.OBJECT, properties: { type: { type: Type.STRING }, impact: { type: Type.STRING } } },
-            narrativeLevels: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { level: { type: Type.STRING }, description: { type: Type.STRING } } } },
+            temporalStructure: { type: Type.OBJECT, properties: { type: { type: Type.STRING }, impact: { type: Type.STRING } }, required: ["type", "impact"] },
+            narrativeLevels: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { level: { type: Type.STRING }, description: { type: Type.STRING } }, required: ["level", "description"] } },
             blindSpot: { type: Type.STRING }
-          }
+          },
+          required: ["focalizationDeep", "temporalStructure", "narrativeLevels", "blindSpot"]
         },
         psychoanalysis: {
           type: Type.OBJECT,
           properties: {
-            drives: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { character: { type: Type.STRING }, drive: { type: Type.STRING }, manifestation: { type: Type.STRING } } } },
-            consciousUnconscious: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { character: { type: Type.STRING }, conscious: { type: Type.STRING }, unconscious: { type: Type.STRING } } } },
+            drives: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { character: { type: Type.STRING }, drive: { type: Type.STRING }, manifestation: { type: Type.STRING } }, required: ["character", "drive", "manifestation"] } },
+            consciousUnconscious: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { character: { type: Type.STRING }, conscious: { type: Type.STRING }, unconscious: { type: Type.STRING } }, required: ["character", "conscious", "unconscious"] } },
             blindSpot: { type: Type.STRING }
-          }
+          },
+          required: ["drives", "consciousUnconscious", "blindSpot"]
         },
         marxism: {
           type: Type.OBJECT,
           properties: {
-            socialPositions: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { character: { type: Type.STRING }, class: { type: Type.STRING }, status: { type: Type.STRING } } } },
+            socialPositions: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { character: { type: Type.STRING }, class: { type: Type.STRING }, status: { type: Type.STRING } }, required: ["character", "class", "status"] } },
             ideology: { type: Type.STRING },
-            dominationGraphe: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { subject: { type: Type.STRING }, dominant: { type: Type.BOOLEAN }, object: { type: Type.STRING } } } },
+            dominationGraphe: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { subject: { type: Type.STRING }, dominant: { type: Type.BOOLEAN }, object: { type: Type.STRING } }, required: ["subject", "dominant", "object"] } },
             blindSpot: { type: Type.STRING }
-          }
+          },
+          required: ["socialPositions", "ideology", "dominationGraphe", "blindSpot"]
         },
         feminism: {
           type: Type.OBJECT,
           properties: {
-            agencyMatrix: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { character: { type: Type.STRING }, agencyScore: { type: Type.NUMBER, description: "Scale 0-100" }, powerSource: { type: Type.STRING } } } },
+            agencyMatrix: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { character: { type: Type.STRING }, agencyScore: { type: Type.NUMBER }, powerSource: { type: Type.STRING } }, required: ["character", "agencyScore", "powerSource"] } },
             symbolicPower: { type: Type.STRING },
             blindSpot: { type: Type.STRING }
-          }
+          },
+          required: ["agencyMatrix", "symbolicPower", "blindSpot"]
         },
         postcolonialism: {
           type: Type.OBJECT,
           properties: {
-            symbolicMap: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { place: { type: Type.STRING }, status: { type: Type.STRING }, meaning: { type: Type.STRING } } } },
+            symbolicMap: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { place: { type: Type.STRING }, status: { type: Type.STRING }, meaning: { type: Type.STRING } }, required: ["place", "status", "meaning"] } },
             otherness: { type: Type.ARRAY, items: { type: Type.STRING } },
             blindSpot: { type: Type.STRING }
-          }
+          },
+          required: ["symbolicMap", "otherness", "blindSpot"]
         },
         receptionAesthetics: {
           type: Type.OBJECT,
           properties: {
             horizonOfExpectation: { type: Type.STRING },
             indeterminacyZones: { type: Type.ARRAY, items: { type: Type.STRING } },
-            readerResponse: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { effect: { type: Type.STRING }, intensity: { type: Type.NUMBER, description: "Scale 0-100" } } } },
+            readerResponse: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { effect: { type: Type.STRING }, intensity: { type: Type.NUMBER } }, required: ["effect", "intensity"] } },
             blindSpot: { type: Type.STRING }
-          }
+          },
+          required: ["horizonOfExpectation", "indeterminacyZones", "readerResponse", "blindSpot"]
         },
         deconstruction: {
           type: Type.OBJECT,
           properties: {
-            implicitHierarchies: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { superior: { type: Type.STRING }, inferior: { type: Type.STRING }, subversion: { type: Type.STRING } } } },
+            implicitHierarchies: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { superior: { type: Type.STRING }, inferior: { type: Type.STRING }, subversion: { type: Type.STRING } }, required: ["superior", "inferior", "subversion"] } },
             paradoxes: { type: Type.ARRAY, items: { type: Type.STRING } },
             instabilityOfMeaning: { type: Type.STRING },
             blindSpot: { type: Type.STRING }
-          }
+          },
+          required: ["implicitHierarchies", "paradoxes", "instabilityOfMeaning", "blindSpot"]
         }
-      }
+      },
+      required: ["structuralism", "narratology", "psychoanalysis", "marxism", "feminism", "postcolonialism", "receptionAesthetics", "deconstruction"]
     },
     comparative: {
       type: Type.OBJECT,
@@ -256,21 +271,35 @@ const analysisSchema = {
             type: Type.OBJECT,
             properties: {
               subject: { type: Type.STRING },
-              workValue: { type: Type.NUMBER, description: "Scale 0-100" },
-              corpusValue: { type: Type.NUMBER, description: "Scale 0-100" }
-            }
+              workValue: { type: Type.NUMBER },
+              corpusValue: { type: Type.NUMBER }
+            },
+            required: ["subject", "workValue", "corpusValue"]
           }
         },
         gapAnalysis: { type: Type.STRING }
-      }
+      },
+      required: ["contemporaries", "authorialContext", "theoreticalDivergence", "gapAnalysis"]
     },
     stylistic: {
       type: Type.OBJECT,
       properties: {
         avgSentenceLength: { type: Type.NUMBER },
-        metaphorDensity: { type: Type.NUMBER, description: "Scale 0-10" },
-        dominantLexicalFields: { type: Type.ARRAY, items: { type: Type.STRING } }
-      }
+        metaphorDensity: { type: Type.NUMBER },
+        dominantLexicalFields: { type: Type.ARRAY, items: { type: Type.STRING } },
+        fingerprint: {
+          type: Type.OBJECT,
+          properties: {
+            complexity: { type: Type.NUMBER },
+            richness: { type: Type.NUMBER },
+            cohesion: { type: Type.NUMBER },
+            abundance: { type: Type.NUMBER },
+            innovation: { type: Type.NUMBER }
+          },
+          required: ["complexity", "richness", "cohesion", "abundance", "innovation"]
+        }
+      },
+      required: ["avgSentenceLength", "metaphorDensity", "dominantLexicalFields", "fingerprint"]
     },
     criticalZone: {
       type: Type.OBJECT,
@@ -283,11 +312,13 @@ const analysisSchema = {
             properties: {
               theory: { type: Type.STRING },
               perspective: { type: Type.STRING }
-            }
+            },
+            required: ["theory", "perspective"]
           }
         },
         unreadable: { type: Type.ARRAY, items: { type: Type.STRING } }
-      }
+      },
+      required: ["tensions", "contradictoryReadings", "unreadable"]
     }
   },
   required: ["title", "author", "summary", "canonical", "thematic", "materiality", "characters", "theoretical", "comparative", "stylistic", "criticalZone"]
@@ -295,26 +326,19 @@ const analysisSchema = {
 
 export const generateAnalysis = async (title: string, language: string): Promise<AnalysisDossier> => {
   const model = "gemini-3-pro-preview";
-  const prompt = `Perform an extremely detailed literary deconstruction of the book: "${title}".
-  Respond strictly in the language: ${language}.
+  const prompt = `Deconstruct the book: "${title}" in ${language}. 
+  Depth: Academic/Theoretical.
   
-  NUMERIC CONSTRAINTS (MANDATORY):
-  - Agency, intensity, theme weights, and divergence metrics MUST BE integers between 0 and 100.
-  - Relationship strength MUST BE between 1 and 10.
-  - Metaphor density MUST BE between 0 and 10.
+  Constraints:
+  - Max 10 characters in 'list'.
+  - MUST include at least one relationship for EVERY character in the list. Source/Target must match character names exactly.
+  - Standard Relationship types: 'conflict', 'love', 'kinship', 'mentor', 'neutral'.
+  - Standard Archetypes: 'hero', 'villain', 'mentor', 'ally', 'sidekick'.
+  - Max 4 items per array in theoretical modules.
+  - All numeric values MUST be integers 0-100.
+  - No empty strings.
   
-  CHARACTER GRAPH REQUIREMENTS:
-  - Identify 8 to 12 significant characters.
-  - Assign each an 'iconType' from: 'hero', 'villain', 'mentor', 'ally', 'sidekick'.
-  - Map their relationships using 'type' from: 'conflict', 'love', 'kinship', 'mentor', 'neutral'.
-  
-  THEORETICAL MODULES (EXPLICIT):
-  - Theme Evolution: Track the intensity of at least 3 main themes across the narrative structure.
-  - Materiality: Analyze authorship (pseudonyms, collaborations), publication history, editorial cuts, and significant translation gaps.
-  - Lexical Obsessions: Identify recurring words/fields for each major theme.
-  - Motifs: Deep dive into at least 4 symbolic elements.
-  
-  Return the output strictly in the requested JSON format. Ensure high academic depth.`;
+  Format: Strict JSON matching the provided schema.`;
 
   const response = await ai.models.generateContent({
     model,
@@ -322,8 +346,14 @@ export const generateAnalysis = async (title: string, language: string): Promise
     config: {
       responseMimeType: "application/json",
       responseSchema: analysisSchema as any,
+      thinkingConfig: { thinkingBudget: 32000 }
     },
   });
 
-  return JSON.parse(response.text || "{}");
+  try {
+    return JSON.parse(response.text || "{}");
+  } catch (err) {
+    console.error("JSON Parsing Error");
+    throw err;
+  }
 };
