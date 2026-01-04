@@ -18,11 +18,11 @@ const CHARACTER_ICONS: Record<string, string> = {
 };
 
 const RELATIONSHIP_COLORS: Record<string, string> = {
-  conflict: '#ef4444',
-  love: '#ec4899',
-  kinship: '#10b981',
-  mentor: '#f59e0b',
-  neutral: '#64748b',
+  conflict: '#f43f5e', // rose-500
+  love: '#d946ef',     // fuchsia-500
+  kinship: '#10b981',  // emerald-500
+  mentor: '#f59e0b',   // amber-500
+  neutral: '#94a3b8',  // slate-400
 };
 
 export const ThemeEvolutionChart: React.FC<{ data: ThemeEvolution[] }> = ({ data }) => {
@@ -111,12 +111,28 @@ export const CharacterGraph: React.FC<{ characters: Character[], relationships: 
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
-    const g = svg.append("g");
+    // Définition des marqueurs de flèche
+    const defs = svg.append("defs");
+    Object.entries(RELATIONSHIP_COLORS).forEach(([type, color]) => {
+      defs.append("marker")
+        .attr("id", `arrowhead-${type}`)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 32) // Positionné au bord du cercle
+        .attr("refY", 0)
+        .attr("markerWidth", 5)
+        .attr("markerHeight", 5)
+        .attr("orient", "auto")
+        .append("path")
+        .attr("d", "M0,-5L10,0L0,5")
+        .attr("fill", color);
+    });
+
+    const container = svg.append("g");
 
     const zoom = d3.zoom()
-      .scaleExtent([0.2, 4])
+      .scaleExtent([0.1, 4])
       .on("zoom", (event) => {
-        g.attr("transform", event.transform);
+        container.attr("transform", event.transform);
         setZoomLevel(event.transform.k);
       });
 
@@ -130,59 +146,69 @@ export const CharacterGraph: React.FC<{ characters: Character[], relationships: 
       .filter(r => nodeIds.has(r.source) && nodeIds.has(r.target))
       .map(r => ({ ...r }));
 
-    // Forces optimisées pour la stabilité
+    // Physique optimisée
     const simulation = d3.forceSimulation(nodes as any)
-      .force("link", d3.forceLink(links).id((d: any) => d.id).distance(160).strength(0.6))
-      .force("charge", d3.forceManyBody().strength(-600).distanceMax(400))
+      .force("link", d3.forceLink(links).id((d: any) => d.id).distance(200).strength(1))
+      .force("charge", d3.forceManyBody().strength(-1500))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius(65))
-      .force("x", d3.forceX(width / 2).strength(0.05))
-      .force("y", d3.forceY(height / 2).strength(0.05));
+      .force("collision", d3.forceCollide().radius(70))
+      .force("x", d3.forceX(width / 2).strength(0.08))
+      .force("y", d3.forceY(height / 2).strength(0.08));
 
-    const link = g.append("g")
+    const link = container.append("g")
       .selectAll("line")
       .data(links)
       .join("line")
       .attr("stroke", (d: any) => RELATIONSHIP_COLORS[d.type] || '#cbd5e1')
-      .attr("stroke-opacity", 0.7)
-      .attr("stroke-width", (d: any) => Math.max(3, (d.strength || 1) * 1.5))
-      .attr("stroke-dasharray", (d: any) => (d.type === 'neutral' || d.type === 'mentor' ? "8,4" : "0"));
+      .attr("stroke-opacity", 0.6)
+      .attr("fill", "none") // Crucial pour éviter les blocs de couleur
+      .attr("stroke-width", (d: any) => Math.max(1.5, (d.strength || 1) * 0.7)) // Liens fins et élégants
+      .attr("marker-end", (d: any) => `url(#arrowhead-${d.type})`);
 
-    const node = g.append("g")
+    const node = container.append("g")
       .selectAll("g")
       .data(nodes)
       .join("g")
-      .attr("class", "cursor-grab active:cursor-grabbing")
+      .attr("class", "cursor-move")
       .call(d3.drag<SVGGElement, any>()
         .on("start", dragstarted)
         .on("drag", dragged)
         .on("end", dragended) as any);
 
+    // Cercle standardisé
     node.append("circle")
-      .attr("r", 30)
-      .attr("fill", "#fff")
+      .attr("r", 25)
+      .attr("fill", "white")
       .attr("stroke", (d: any) => {
         if (d.iconType === 'hero') return '#6366f1';
-        if (d.iconType === 'villain') return '#ef4444';
-        return '#cbd5e1';
+        if (d.iconType === 'villain') return '#f43f5e';
+        return '#94a3b8';
       })
-      .attr("stroke-width", 3)
-      .style("filter", "drop-shadow(0 4px 6px rgb(0 0 0 / 0.1))");
+      .attr("stroke-width", 2)
+      .style("filter", "drop-shadow(0 2px 4px rgb(0 0 0 / 0.1))");
 
+    // Emojis d'icônes standardisées
     node.append("text")
       .attr("text-anchor", "middle")
       .attr("dy", ".35em")
-      .attr("font-size", "24px")
+      .attr("font-size", "20px")
       .text((d: any) => CHARACTER_ICONS[d.iconType] || '👤');
 
+    // Label Nom
     node.append("text")
-      .attr("x", 0)
-      .attr("y", 48)
+      .attr("y", 40)
       .attr("text-anchor", "middle")
       .text(d => d.name)
-      .attr("class", "text-[12px] font-bold")
-      .style("fill", "#0f172a")
-      .style("text-shadow", "0 0 4px white");
+      .attr("class", "text-[11px] font-bold fill-slate-800")
+      .style("pointer-events", "none");
+
+    // Label Rôle
+    node.append("text")
+      .attr("y", 52)
+      .attr("text-anchor", "middle")
+      .text(d => d.role)
+      .attr("class", "text-[9px] fill-slate-400 font-medium italic")
+      .style("pointer-events", "none");
 
     simulation.on("tick", () => {
       link
@@ -210,24 +236,19 @@ export const CharacterGraph: React.FC<{ characters: Character[], relationships: 
     }
 
     svg.call(zoom.transform as any, d3.zoomIdentity);
-
     return () => simulation.stop();
   }, [characters, relationships]);
 
   const handleManualZoom = (e: React.ChangeEvent<HTMLInputElement>) => {
     const scale = parseFloat(e.target.value);
     if (svgRef.current && zoomRef.current) {
-      d3.select(svgRef.current).transition().duration(200).call(
-        zoomRef.current.scaleTo, scale
-      );
+      d3.select(svgRef.current).transition().duration(200).call(zoomRef.current.scaleTo, scale);
     }
   };
 
   const handleResetZoom = () => {
     if (svgRef.current && zoomRef.current) {
-      d3.select(svgRef.current).transition().duration(500).call(
-        zoomRef.current.transform, d3.zoomIdentity
-      );
+      d3.select(svgRef.current).transition().duration(500).call(zoomRef.current.transform, d3.zoomIdentity);
     }
   };
 
@@ -236,7 +257,7 @@ export const CharacterGraph: React.FC<{ characters: Character[], relationships: 
       <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
         <div>
           <h3 className="text-xl font-bold text-slate-800">Graphe Relationnel Interactif</h3>
-          <p className="text-xs text-slate-400 font-medium">Chaque personnage est connecté au noyau sémantique.</p>
+          <p className="text-xs text-slate-400 font-medium">Structure stable et connectée du noyau sémantique.</p>
         </div>
         
         <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-lg border border-slate-200">
@@ -252,11 +273,7 @@ export const CharacterGraph: React.FC<{ characters: Character[], relationships: 
           />
           <ZoomIn className="w-4 h-4 text-slate-400" />
           <div className="w-px h-4 bg-slate-200 mx-1"></div>
-          <button 
-            onClick={handleResetZoom}
-            title="Réinitialiser la vue"
-            className="p-1 hover:bg-white rounded transition-colors text-slate-600"
-          >
+          <button onClick={handleResetZoom} title="Réinitialiser la vue" className="p-1 hover:bg-white rounded transition-colors text-slate-600">
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
@@ -265,8 +282,8 @@ export const CharacterGraph: React.FC<{ characters: Character[], relationships: 
       <div className="flex-1 bg-slate-50/50 rounded-2xl overflow-hidden border border-slate-100 relative">
         <svg ref={svgRef} className="w-full h-full" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet" />
         
-        <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm p-4 rounded-xl border border-slate-100 shadow-xl max-w-[220px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Légende Stable</p>
+        <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm p-4 rounded-xl border border-slate-100 shadow-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Légende</p>
           <div className="space-y-3 text-[10px] font-bold text-slate-600">
              <div className="grid grid-cols-2 gap-2">
                <span className="flex items-center gap-1.5">⭐ Héros</span>
@@ -274,11 +291,11 @@ export const CharacterGraph: React.FC<{ characters: Character[], relationships: 
                <span className="flex items-center gap-1.5">🦉 Mentor</span>
                <span className="flex items-center gap-1.5">🤝 Allié</span>
              </div>
-             <div className="space-y-2 pt-2 border-t border-slate-100">
-               <div className="flex items-center gap-2"><div className="w-4 h-1 bg-[#ef4444] rounded"></div> Conflit</div>
-               <div className="flex items-center gap-2"><div className="w-4 h-1 bg-[#ec4899] rounded"></div> Romance</div>
-               <div className="flex items-center gap-2"><div className="w-4 h-1 bg-[#10b981] rounded"></div> Parenté</div>
-               <div className="flex items-center gap-2"><div className="w-4 h-1 bg-[#64748b] opacity-50 border-t border-dashed"></div> Neutre / Autre</div>
+             <div className="space-y-1.5 pt-2 border-t border-slate-100">
+               <div className="flex items-center gap-2"><div className="w-3 h-0.5 bg-[#f43f5e]"></div> Conflit</div>
+               <div className="flex items-center gap-2"><div className="w-3 h-0.5 bg-[#d946ef]"></div> Romance</div>
+               <div className="flex items-center gap-2"><div className="w-3 h-0.5 bg-[#10b981]"></div> Parenté</div>
+               <div className="flex items-center gap-2"><div className="w-3 h-0.5 bg-[#94a3b8]"></div> Neutre</div>
              </div>
           </div>
         </div>
@@ -302,10 +319,7 @@ export const ThemeCloud: React.FC<{ themes: Theme[] }> = ({ themes }) => {
               key={idx} 
               title={t.description}
               className="px-4 py-2 rounded-xl border border-slate-100 shadow-sm font-semibold text-slate-700 transition-all hover:scale-110 hover:bg-indigo-50 hover:text-indigo-700 cursor-help"
-              style={{ 
-                fontSize: `${fontSize}rem`, 
-                opacity: 0.4 + (relativeWeight * 0.6) 
-              }}
+              style={{ fontSize: `${fontSize}rem`, opacity: 0.4 + (relativeWeight * 0.6) }}
             >
               {t.label}
             </span>

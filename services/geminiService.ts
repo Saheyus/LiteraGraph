@@ -329,14 +329,18 @@ export const generateAnalysis = async (title: string, language: string): Promise
   const prompt = `Deconstruct the book: "${title}" in ${language}. 
   Depth: Academic/Theoretical.
   
-  Constraints:
-  - Max 10 characters in 'list'.
-  - MUST include at least one relationship for EVERY character in the list. Source/Target must match character names exactly.
-  - Standard Relationship types: 'conflict', 'love', 'kinship', 'mentor', 'neutral'.
-  - Standard Archetypes: 'hero', 'villain', 'mentor', 'ally', 'sidekick'.
-  - Max 4 items per array in theoretical modules.
-  - All numeric values MUST be integers 0-100.
-  - No empty strings.
+  CORE RULE: The character relationship graph MUST be fully connected. 
+  - EVERY character in 'characters.list' MUST appear as either 'source' or 'target' in at least one object in 'characters.relationships'.
+  - Relationship source/target names must EXACTLY match character names in 'list'.
+  - Relationship types: 'conflict', 'love', 'kinship', 'mentor', 'neutral'.
+  - Archetypes: 'hero', 'villain', 'mentor', 'ally', 'sidekick'.
+  - Max 8 characters for visual stability.
+  
+  NUMERIC CONSTRAINTS:
+  - All numeric values for 'stylistic.fingerprint' (complexity, richness, cohesion, abundance, innovation) MUST be integers from 0 to 100.
+  - All numeric values for 'comparative.theoreticalDivergence' (workValue, corpusValue) MUST be integers from 0 to 100.
+  - NO decimal points are allowed in any numeric value.
+  - Ensure the scale is consistent: 0 represents absence/minimal, 100 represents maximal/total presence.
   
   Format: Strict JSON matching the provided schema.`;
 
