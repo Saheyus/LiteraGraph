@@ -58,18 +58,18 @@ const App: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-indigo-700">Phrases (mots)</span>
-                      <span className="font-bold">{dossier.stylistic.avgSentenceLength}</span>
+                      <span className="font-bold">{dossier.stylistic?.avgSentenceLength || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-indigo-700">Métaphores</span>
-                      <span className="font-bold">{dossier.stylistic.metaphorDensity}/10</span>
+                      <span className="font-bold">{dossier.stylistic?.metaphorDensity || 0}/10</span>
                     </div>
                   </div>
                 </div>
                 <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-100">
                   <h3 className="font-bold text-emerald-900 mb-2">Voix Narrative</h3>
-                  <p className="text-emerald-800 text-sm">{dossier.canonical.narrativeVoice}</p>
-                  <p className="text-emerald-700 text-xs mt-2 uppercase tracking-wider font-semibold">Focalisation: {dossier.canonical.focalization}</p>
+                  <p className="text-emerald-800 text-sm">{dossier.canonical?.narrativeVoice}</p>
+                  <p className="text-emerald-700 text-xs mt-2 uppercase tracking-wider font-semibold">Focalisation: {dossier.canonical?.focalization}</p>
                 </div>
               </div>
             </div>
@@ -110,7 +110,7 @@ const App: React.FC = () => {
                       <div className="absolute left-0 top-1.5 w-8 h-8 rounded-full bg-white border-4 border-indigo-500 z-10"></div>
                       <h4 className="font-bold text-slate-800 text-lg mb-2">{act.title}</h4>
                       <ul className="space-y-1 list-disc list-inside text-slate-600 text-sm">
-                        {act.events.map((ev, j) => <li key={j}>{ev}</li>)}
+                        {act.events?.map((ev, j) => <li key={j}>{ev}</li>)}
                       </ul>
                     </div>
                   ))}
@@ -272,7 +272,7 @@ const App: React.FC = () => {
         );
 
       case 'theoretical':
-        const currentLensData = dossier.theoretical[activeLens];
+        const currentLensData = dossier.theoretical?.[activeLens];
         return (
           <div className="flex flex-col lg:flex-row gap-6 animate-in fade-in duration-500">
             <div className="lg:w-80 shrink-0 space-y-2">
@@ -296,95 +296,260 @@ const App: React.FC = () => {
               ))}
             </div>
             <div className="flex-1 space-y-6">
-              <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 min-h-[400px]">
+              <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 min-h-[500px]">
                 <div className="mb-8">
                   <h2 className="text-2xl font-bold text-slate-900 mb-2">{THEORETICAL_LENSES.find(l => l.id === activeLens)?.label}</h2>
                   <p className="text-slate-500">{THEORETICAL_LENSES.find(l => l.id === activeLens)?.description}</p>
                 </div>
 
-                {activeLens === 'structuralism' && (
-                  <div className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-slate-50 p-6 rounded-xl">
-                        <h4 className="font-bold mb-4 text-indigo-900">Fonctions</h4>
-                        <div className="space-y-4">
-                          {(dossier.theoretical.structuralism.functions || []).map((f, i) => (
-                            <div key={i} className="bg-white p-3 rounded-lg shadow-sm">
-                              <div className="font-bold text-slate-800 text-sm mb-1">{f.function}</div>
-                              <div className="text-xs text-slate-500 italic">{f.scenes?.join(', ')}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="bg-indigo-900 text-white p-6 rounded-xl">
-                        <h4 className="font-bold mb-4 text-indigo-200">Oppositions Binaires</h4>
-                        <div className="space-y-6">
-                          {(dossier.theoretical.structuralism.binaryOppositions || []).map((op, i) => (
-                            <div key={i} className="text-center relative py-4 border-b border-indigo-800 last:border-0">
-                              <div className="flex justify-between font-bold text-lg mb-2">
-                                <span>{op.left}</span>
-                                <span className="text-indigo-400">vs</span>
-                                <span>{op.right}</span>
-                              </div>
-                              <div className="text-sm italic opacity-60">Synthèse: {op.synthesis}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                {!currentLensData ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                    <Info className="w-12 h-12 mb-4 opacity-20" />
+                    <p className="italic">Données théoriques indisponibles pour cette grille.</p>
                   </div>
-                )}
-
-                {activeLens === 'narratology' && (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-slate-900 text-slate-100 p-6 rounded-xl border border-slate-800">
-                        <h4 className="font-bold mb-4 text-indigo-400">Focalisation & Voix</h4>
-                        <p className="leading-relaxed mb-4">{dossier.theoretical.narratology.focalizationDeep}</p>
-                        <div className="p-4 bg-slate-800 rounded-lg">
-                           <span className="text-xs font-bold text-indigo-300 uppercase block mb-1">Structure Temporelle</span>
-                           <p className="font-bold text-lg">{dossier.theoretical.narratology.temporalStructure?.type}</p>
-                           <p className="text-sm opacity-70 mt-1">{dossier.theoretical.narratology.temporalStructure?.impact}</p>
-                        </div>
-                      </div>
-                      <div className="bg-white border border-slate-200 p-6 rounded-xl">
-                        <h4 className="font-bold mb-4 text-slate-900">Niveaux Narratifs</h4>
-                        <div className="space-y-4">
-                          {(dossier.theoretical.narratology.narrativeLevels || []).map((lvl, i) => (
-                            <div key={i} className="p-3 bg-slate-50 rounded-lg border-l-4 border-indigo-500">
-                              <div className="font-bold text-slate-800 text-sm">{lvl.level}</div>
-                              <div className="text-xs text-slate-500 mt-1">{lvl.description}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {activeLens === 'psychoanalysis' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-rose-50 p-6 rounded-xl border border-rose-100">
-                      <h4 className="font-bold mb-4 text-rose-900">Désirs & Pulsions</h4>
-                      <div className="space-y-4">
-                        {(dossier.theoretical.psychoanalysis.drives || []).map((d, i) => (
-                          <div key={i} className="flex gap-4 items-start">
-                            <div className="font-bold text-rose-600 text-sm whitespace-nowrap">{d.character}</div>
-                            <div className="text-sm">
-                              <span className="font-bold uppercase text-[10px] block">{d.drive}</span>
-                              <p className="text-rose-800 italic">{d.manifestation}</p>
+                ) : (
+                  <>
+                    {activeLens === 'structuralism' && (
+                      <div className="space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="bg-slate-50 p-6 rounded-xl">
+                            <h4 className="font-bold mb-4 text-indigo-900">Fonctions</h4>
+                            <div className="space-y-4">
+                              {(dossier.theoretical.structuralism.functions || []).map((f, i) => (
+                                <div key={i} className="bg-white p-3 rounded-lg shadow-sm">
+                                  <div className="font-bold text-slate-800 text-sm mb-1">{f.function}</div>
+                                  <div className="text-xs text-slate-500 italic">{f.scenes?.join(', ')}</div>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        ))}
+                          <div className="bg-indigo-900 text-white p-6 rounded-xl">
+                            <h4 className="font-bold mb-4 text-indigo-200">Oppositions Binaires</h4>
+                            <div className="space-y-6">
+                              {(dossier.theoretical.structuralism.binaryOppositions || []).map((op, i) => (
+                                <div key={i} className="text-center relative py-4 border-b border-indigo-800 last:border-0">
+                                  <div className="flex justify-between font-bold text-lg mb-2">
+                                    <span>{op.left}</span>
+                                    <span className="text-indigo-400">vs</span>
+                                    <span>{op.right}</span>
+                                  </div>
+                                  <div className="text-sm italic opacity-60">Synthèse: {op.synthesis}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="bg-white border border-slate-200 p-6 rounded-xl">
-                      <h4 className="font-bold mb-4 text-slate-900">Structures Psychiques</h4>
-                      <RadarComparison data={(dossier.characters?.list || []).map(c => ({ subject: c.name, A: c.agency }))} />
-                    </div>
-                  </div>
+                    )}
+
+                    {activeLens === 'narratology' && (
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="bg-slate-900 text-slate-100 p-6 rounded-xl border border-slate-800">
+                            <h4 className="font-bold mb-4 text-indigo-400">Focalisation & Voix</h4>
+                            <p className="leading-relaxed mb-4">{dossier.theoretical.narratology.focalizationDeep}</p>
+                            <div className="p-4 bg-slate-800 rounded-lg">
+                               <span className="text-xs font-bold text-indigo-300 uppercase block mb-1">Structure Temporelle</span>
+                               <p className="font-bold text-lg">{dossier.theoretical.narratology.temporalStructure?.type}</p>
+                               <p className="text-sm opacity-70 mt-1">{dossier.theoretical.narratology.temporalStructure?.impact}</p>
+                            </div>
+                          </div>
+                          <div className="bg-white border border-slate-200 p-6 rounded-xl">
+                            <h4 className="font-bold mb-4 text-slate-900">Niveaux Narratifs</h4>
+                            <div className="space-y-4">
+                              {(dossier.theoretical.narratology.narrativeLevels || []).map((lvl, i) => (
+                                <div key={i} className="p-3 bg-slate-50 rounded-lg border-l-4 border-indigo-500">
+                                  <div className="font-bold text-slate-800 text-sm">{lvl.level}</div>
+                                  <div className="text-xs text-slate-500 mt-1">{lvl.description}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {activeLens === 'psychoanalysis' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-rose-50 p-6 rounded-xl border border-rose-100">
+                          <h4 className="font-bold mb-4 text-rose-900">Désirs & Pulsions</h4>
+                          <div className="space-y-4">
+                            {(dossier.theoretical.psychoanalysis.drives || []).map((d, i) => (
+                              <div key={i} className="flex gap-4 items-start">
+                                <div className="font-bold text-rose-600 text-sm whitespace-nowrap">{d.character}</div>
+                                <div className="text-sm">
+                                  <span className="font-bold uppercase text-[10px] block">{d.drive}</span>
+                                  <p className="text-rose-800 italic">{d.manifestation}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="bg-white border border-slate-200 p-6 rounded-xl">
+                          <h4 className="font-bold mb-4 text-slate-900">Structures Psychiques</h4>
+                          <RadarComparison data={(dossier.characters?.list || []).map(c => ({ subject: c.name, A: c.agency }))} />
+                        </div>
+                      </div>
+                    )}
+
+                    {activeLens === 'marxism' && (
+                      <div className="space-y-6">
+                        <div className="p-6 bg-slate-900 text-slate-300 rounded-xl">
+                          <h4 className="font-bold mb-2 text-white">Idéologie Implicite</h4>
+                          <p className="italic leading-relaxed">"{dossier.theoretical.marxism.ideology}"</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {(dossier.theoretical.marxism.socialPositions || []).map((p, i) => (
+                            <div key={i} className="p-4 bg-slate-50 border border-slate-100 rounded-lg">
+                              <div className="font-bold text-slate-900">{p.character}</div>
+                              <div className="text-indigo-600 text-xs font-bold uppercase">{p.class}</div>
+                              <div className="text-xs text-slate-500 mt-2">{p.status}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="bg-white p-6 border border-slate-200 rounded-xl">
+                          <h4 className="font-bold mb-4 text-slate-800 uppercase tracking-tighter">Graphe de Domination</h4>
+                          <div className="space-y-2">
+                             {(dossier.theoretical.marxism.dominationGraphe || []).map((d, i) => (
+                               <div key={i} className="flex items-center gap-4 text-sm">
+                                  <span className="font-bold text-slate-700 w-32">{d.subject}</span>
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${d.dominant ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                                     {d.dominant ? 'DOMINE' : 'EST DOMINÉ PAR'}
+                                  </span>
+                                  <span className="text-slate-500">{d.object}</span>
+                               </div>
+                             ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeLens === 'feminism' && (
+                      <div className="space-y-6">
+                        <div className="p-6 bg-purple-50 border border-purple-100 rounded-xl">
+                          <h4 className="font-bold mb-2 text-purple-900">Pouvoir Symbolique</h4>
+                          <p className="text-purple-800 italic">"{dossier.theoretical.feminism.symbolicPower}"</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           {(dossier.theoretical.feminism.agencyMatrix || []).map((item, i) => (
+                             <div key={i} className="p-4 bg-white border border-slate-200 rounded-xl">
+                                <div className="font-bold text-slate-900 mb-2">{item.character}</div>
+                                <div className="flex items-center gap-2 mb-2">
+                                   <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                     <div className="bg-purple-500 h-full" style={{ width: `${item.agencyScore}%` }}></div>
+                                   </div>
+                                   <span className="text-xs font-bold">{item.agencyScore}%</span>
+                                </div>
+                                <div className="text-xs text-slate-500 italic">Source: {item.powerSource}</div>
+                             </div>
+                           ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {activeLens === 'postcolonialism' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <h4 className="font-bold text-slate-800 px-1">Topographie Symbolique</h4>
+                          {(dossier.theoretical.postcolonialism.symbolicMap || []).map((loc, i) => (
+                            <div key={i} className="p-4 bg-slate-50 border border-slate-100 rounded-lg">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="font-bold text-slate-800">{loc.place}</span>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                                  loc.status === 'Center' ? 'bg-blue-100 text-blue-700' :
+                                  loc.status === 'Periphery' ? 'bg-orange-100 text-orange-700' :
+                                  'bg-green-100 text-green-700'
+                                }`}>{loc.status}</span>
+                              </div>
+                              <p className="text-xs text-slate-500 italic">{loc.meaning}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="bg-emerald-900 text-emerald-100 p-6 rounded-xl">
+                           <h4 className="font-bold mb-4 text-emerald-400">Figures de l'Altérité</h4>
+                           <ul className="space-y-4">
+                              {(dossier.theoretical.postcolonialism.otherness || []).map((o, i) => (
+                                <li key={i} className="text-sm italic border-b border-emerald-800 pb-2 last:border-0 leading-relaxed">
+                                  "{o}"
+                                </li>
+                              ))}
+                           </ul>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeLens === 'receptionAesthetics' && (
+                      <div className="space-y-6">
+                        <div className="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                          <h4 className="font-bold mb-2 text-indigo-900">Horizon d'attente</h4>
+                          <p className="text-indigo-800 leading-relaxed italic">"{dossier.theoretical.receptionAesthetics.horizonOfExpectation}"</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="bg-white p-6 border border-slate-100 rounded-xl">
+                            <h4 className="font-bold mb-4 text-slate-900">Zones d'indétermination</h4>
+                            <ul className="space-y-2">
+                              {(dossier.theoretical.receptionAesthetics.indeterminacyZones || []).map((z, i) => (
+                                <li key={i} className="text-sm text-slate-600 flex gap-2">
+                                  <span className="text-indigo-500 font-black">•</span> {z}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className="bg-slate-50 p-6 rounded-xl">
+                            <h4 className="font-bold mb-4 text-slate-900">Effets de lecture</h4>
+                            <div className="space-y-4">
+                              {(dossier.theoretical.receptionAesthetics.readerResponse || []).map((r, i) => (
+                                <div key={i} className="space-y-1">
+                                  <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-500">
+                                    <span>{r.effect}</span>
+                                    <span>{r.intensity}%</span>
+                                  </div>
+                                  <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                                    <div className="bg-indigo-600 h-full" style={{ width: `${r.intensity}%` }}></div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeLens === 'deconstruction' && (
+                      <div className="space-y-6">
+                        <div className="bg-slate-900 p-8 rounded-xl text-slate-100 border border-slate-800">
+                          <h4 className="font-bold mb-4 text-amber-400">Instabilité du sens</h4>
+                          <p className="italic leading-relaxed">"{dossier.theoretical.deconstruction.instabilityOfMeaning}"</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                           <div className="bg-white p-6 border border-slate-100 rounded-xl shadow-sm">
+                              <h4 className="font-bold mb-4 text-slate-900">Paradoxes internes</h4>
+                              <div className="space-y-3">
+                                {(dossier.theoretical.deconstruction.paradoxes || []).map((p, i) => (
+                                  <div key={i} className="p-3 bg-amber-50 border border-amber-100 rounded text-sm italic text-amber-900 leading-tight">
+                                    "{p}"
+                                  </div>
+                                ))}
+                              </div>
+                           </div>
+                           <div className="space-y-4">
+                              <h4 className="font-bold text-slate-900 px-1">Hiérarchies Implicitées</h4>
+                              {(dossier.theoretical.deconstruction.implicitHierarchies || []).map((h, i) => (
+                                <div key={i} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                   <div className="flex justify-between items-center font-bold text-slate-800 mb-2">
+                                      <span className="text-indigo-600">{h.superior}</span>
+                                      <span className="text-xs text-slate-400">/</span>
+                                      <span className="text-slate-400 line-through">{h.inferior}</span>
+                                   </div>
+                                   <p className="text-xs text-slate-500 italic">Subversion: {h.subversion}</p>
+                                </div>
+                              ))}
+                           </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
-                {/* ... Autres lentilles de théorie ... */}
               </div>
 
               {/* Blind Spot Module */}

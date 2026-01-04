@@ -1,11 +1,12 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, 
   Legend, AreaChart, Area
 } from 'recharts';
 import * as d3 from 'd3';
+import { ZoomIn, ZoomOut, RefreshCw } from 'lucide-react';
 import { Character, Relationship, Theme, ComparativeMetric, ThemeEvolution } from '../types';
 
 const CHARACTER_ICONS: Record<string, string> = {
@@ -25,7 +26,6 @@ const RELATIONSHIP_COLORS: Record<string, string> = {
 };
 
 export const ThemeEvolutionChart: React.FC<{ data: ThemeEvolution[] }> = ({ data }) => {
-  // Sécurité : Vérifier que data est un tableau non vide et que le premier élément a une progression
   if (!data || !Array.isArray(data) || data.length === 0 || !data[0]?.progression) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 h-[400px] flex items-center justify-center text-slate-400 italic">
@@ -74,7 +74,7 @@ export const ThemeEvolutionChart: React.FC<{ data: ThemeEvolution[] }> = ({ data
     );
   } catch (e) {
     console.error("Error rendering ThemeEvolutionChart:", e);
-    return <div className="p-6 text-red-500">Erreur de rendu du graphique d'évolution.</div>;
+    return <div className="p-6 text-red-500">Erreur de rendu du graphique d'évolution thématique.</div>;
   }
 };
 
@@ -100,14 +100,30 @@ export const DivergenceChart: React.FC<{ data: ComparativeMetric[] }> = ({ data 
 
 export const CharacterGraph: React.FC<{ characters: Character[], relationships: Relationship[] }> = ({ characters, relationships }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const zoomRef = useRef<any>(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
 
   useEffect(() => {
     if (!svgRef.current || !characters || characters.length === 0) return;
 
     const width = 800;
-    const height = 500;
+    const height = 600;
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
+
+    // Group for zoom transformations
+    const g = svg.append("g");
+
+    // Initialize zoom
+    const zoom = d3.zoom()
+      .scaleExtent([0.2, 5])
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform);
+        setZoomLevel(event.transform.k);
+      });
+
+    svg.call(zoom as any);
+    zoomRef.current = zoom;
 
     const nodes = characters.map(c => ({ ...c, id: c.name }));
     const nodeIds = new Set(nodes.map(n => n.id));
@@ -117,52 +133,55 @@ export const CharacterGraph: React.FC<{ characters: Character[], relationships: 
       .map(r => ({ ...r }));
 
     const simulation = d3.forceSimulation(nodes as any)
-      .force("link", d3.forceLink(links).id((d: any) => d.id).distance(150).strength(0.4))
-      .force("charge", d3.forceManyBody().strength(-600))
+      .force("link", d3.forceLink(links).id((d: any) => d.id).distance(180).strength(0.3))
+      .force("charge", d3.forceManyBody().strength(-800))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius(60));
+      .force("collision", d3.forceCollide().radius(70));
 
-    const link = svg.append("g")
+    const link = g.append("g")
       .selectAll("line")
       .data(links)
       .join("line")
       .attr("stroke", (d: any) => RELATIONSHIP_COLORS[d.type] || '#cbd5e1')
       .attr("stroke-opacity", 0.6)
-      .attr("stroke-width", (d: any) => Math.max(1.5, (d.strength || 1) * 0.8))
-      .attr("stroke-dasharray", (d: any) => (d.type === 'conflict' || d.type === 'mentor' ? "4,4" : "0"));
+      .attr("stroke-width", (d: any) => Math.max(2, (d.strength || 1) * 1.2))
+      .attr("stroke-dasharray", (d: any) => (d.type === 'conflict' || d.type === 'mentor' ? "6,4" : "0"));
 
-    const node = svg.append("g")
+    const node = g.append("g")
       .selectAll("g")
       .data(nodes)
       .join("g")
+      .attr("class", "cursor-grab active:cursor-grabbing")
       .call(d3.drag<SVGGElement, any>()
         .on("start", dragstarted)
         .on("drag", dragged)
         .on("end", dragended) as any);
 
     node.append("circle")
-      .attr("r", 22)
+      .attr("r", 28)
       .attr("fill", "#fff")
       .attr("stroke", (d: any) => {
         if (d.iconType === 'hero') return '#6366f1';
         if (d.iconType === 'villain') return '#ef4444';
         return '#cbd5e1';
       })
-      .attr("stroke-width", 2);
+      .attr("stroke-width", 3)
+      .attr("class", "shadow-sm filter drop-shadow-md");
 
     node.append("text")
       .attr("text-anchor", "middle")
       .attr("dy", ".35em")
-      .attr("font-size", "18px")
+      .attr("font-size", "22px")
       .text((d: any) => CHARACTER_ICONS[d.iconType] || '👤');
 
     node.append("text")
       .attr("x", 0)
-      .attr("y", 35)
+      .attr("y", 45)
       .attr("text-anchor", "middle")
       .text(d => d.name)
-      .attr("class", "text-[11px] font-bold")
-      .style("fill", "#334155");
+      .attr("class", "text-[12px] font-bold")
+      .style("fill", "#1e293b")
+      .style("text-shadow", "0 1px 2px white");
 
     simulation.on("tick", () => {
       link
@@ -189,34 +208,82 @@ export const CharacterGraph: React.FC<{ characters: Character[], relationships: 
       event.subject.fy = null;
     }
 
+    // Default zoom to center
+    svg.call(zoom.transform as any, d3.zoomIdentity);
+
     return () => simulation.stop();
   }, [characters, relationships]);
 
+  const handleManualZoom = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const scale = parseFloat(e.target.value);
+    if (svgRef.current && zoomRef.current) {
+      d3.select(svgRef.current).transition().duration(200).call(
+        zoomRef.current.scaleTo, scale
+      );
+    }
+  };
+
+  const handleResetZoom = () => {
+    if (svgRef.current && zoomRef.current) {
+      d3.select(svgRef.current).transition().duration(500).call(
+        zoomRef.current.transform, d3.zoomIdentity
+      );
+    }
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col h-[650px]">
-      <div className="flex justify-between items-start mb-6">
-        <h3 className="text-xl font-bold text-slate-800">Graphe Relationnel Dynamique</h3>
-        <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-           <div className="space-y-1">
-             <p className="mb-2 border-b border-slate-100 pb-1">Icônes</p>
-             <div className="flex items-center gap-2"><span className="text-sm">⭐</span> Héros</div>
-             <div className="flex items-center gap-2"><span className="text-sm">⚔️</span> Antagoniste</div>
-             <div className="flex items-center gap-2"><span className="text-sm">📖</span> Mentor</div>
-             <div className="flex items-center gap-2"><span className="text-sm">🛡️</span> Allié</div>
-           </div>
-           <div className="space-y-1">
-             <p className="mb-2 border-b border-slate-100 pb-1">Relations</p>
-             <div className="flex items-center gap-2"><div className="w-4 h-0.5 bg-[#ef4444] border-t border-dashed"></div> Conflit</div>
-             <div className="flex items-center gap-2"><div className="w-4 h-0.5 bg-[#ec4899]"></div> Romance</div>
-             <div className="flex items-center gap-2"><div className="w-4 h-0.5 bg-[#10b981]"></div> Parenté</div>
-             <div className="flex items-center gap-2"><div className="w-4 h-0.5 bg-[#f59e0b] border-t border-dashed"></div> Tutorat</div>
-           </div>
+    <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col h-[700px] relative group">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
+        <div>
+          <h3 className="text-xl font-bold text-slate-800">Graphe Relationnel Interactif</h3>
+          <p className="text-xs text-slate-400">Molette pour zoomer • Cliquer-glisser pour déplacer le fond ou les nœuds</p>
+        </div>
+        
+        {/* Zoom Controls Overlay */}
+        <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-lg border border-slate-200">
+          <ZoomOut className="w-4 h-4 text-slate-400" />
+          <input 
+            type="range" 
+            min="0.2" 
+            max="3" 
+            step="0.1" 
+            value={zoomLevel} 
+            onChange={handleManualZoom}
+            className="w-24 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+          />
+          <ZoomIn className="w-4 h-4 text-slate-400" />
+          <div className="w-px h-4 bg-slate-200 mx-1"></div>
+          <button 
+            onClick={handleResetZoom}
+            title="Réinitialiser la vue"
+            className="p-1 hover:bg-white rounded transition-colors text-slate-600"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+          <span className="text-[10px] font-bold text-slate-500 min-w-[30px]">{Math.round(zoomLevel * 100)}%</span>
         </div>
       </div>
-      <div className="flex-1 bg-slate-50 rounded-xl overflow-hidden border border-slate-100 relative">
-        <svg ref={svgRef} width="100%" height="100%" className="cursor-move" viewBox="0 0 800 500" />
+
+      <div className="flex-1 bg-slate-50/50 rounded-2xl overflow-hidden border border-slate-100 relative">
+        <svg ref={svgRef} className="w-full h-full" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet" />
+        
+        {/* Floating Legend */}
+        <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm p-4 rounded-xl border border-slate-100 shadow-xl max-w-[200px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Légende</p>
+          <div className="space-y-3 text-[10px] font-semibold text-slate-600">
+             <div className="flex flex-wrap gap-2">
+               <span className="flex items-center gap-1">⭐ Héros</span>
+               <span className="flex items-center gap-1">⚔️ Villain</span>
+               <span className="flex items-center gap-1">📖 Mentor</span>
+             </div>
+             <div className="space-y-1 pt-2 border-t border-slate-100">
+               <div className="flex items-center gap-2"><div className="w-3 h-0.5 bg-[#ef4444] border-t border-dashed"></div> Conflit</div>
+               <div className="flex items-center gap-2"><div className="w-3 h-0.5 bg-[#ec4899]"></div> Romance</div>
+               <div className="flex items-center gap-2"><div className="w-3 h-0.5 bg-[#10b981]"></div> Parenté</div>
+             </div>
+          </div>
+        </div>
       </div>
-      <p className="mt-4 text-xs text-slate-400 italic">Épaisseur = Intensité • Pointillés = Tension ou tutorat</p>
     </div>
   );
 };
